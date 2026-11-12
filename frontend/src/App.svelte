@@ -1,29 +1,27 @@
 <script lang="ts">
-  import NavigationBar from "$lib/views/components/NavigationBar.svelte";
+  import * as Tabs from "$lib/components/ui/tabs";
   import Create from "$lib/views/Create.svelte";
+  import * as Separator from "$lib/components/ui/separator";
   import SSHKeys from "$lib/views/SSHKeys.svelte";
   import { ModeWatcher } from "mode-watcher";
-
-  let route = $state(window.location.hash || "#keys");
-
-  function updateRoute() {
-    route = window.location.hash || "#keys";
-  }
 </script>
 
-<svelte:window onhashchange={updateRoute} />
 <ModeWatcher defaultMode="dark" />
 
-<div class="p-4 mt-12 w-full min-w-0">
-  <NavigationBar />
-
-  {#if route === "#keys"}
-    <SSHKeys />
-  {:else if route == "#create"}
-    <Create />
-  {:else}
-    <p>Unknown Route: {route}</p>
-  {/if}
+<div class="p-2.5 w-full min-w-0">
+  <Tabs.Root value="#keys">
+    <Tabs.List variant="line" class="ml-20">
+      <Tabs.Trigger value="#keys">Keys</Tabs.Trigger>
+      <Tabs.Trigger value="#create">Create</Tabs.Trigger>
+    </Tabs.List>
+    <Separator.Root class="my-2" />
+    <Tabs.Content value="#keys">
+      <SSHKeys />
+    </Tabs.Content>
+    <Tabs.Content value="#create">
+      <Create />
+    </Tabs.Content>
+  </Tabs.Root>
 </div>
 
 <style>
