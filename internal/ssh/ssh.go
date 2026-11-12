@@ -100,6 +100,20 @@ func (s SSHService) DeleteKey(path string) error {
 	return os.Remove(path)
 }
 
+func (s SSHService) GetFingerprint(keyPath string) (string, error) {
+	panic("TODO")
+	return "", nil
+}
+
+func (s SSHService) GetSSHConfig(host string) (any, error) {
+	panic("TODO")
+	return nil, nil
+}
+
+func (s SSHService) DeployKey() {
+	panic("TODO")
+}
+
 func (s SSHService) executeCmd(cmd string, args ...string) (string, error) {
 	c := exec.Command(cmd, args...)
 	out, err := c.CombinedOutput()
