@@ -4,6 +4,8 @@ import (
 	"embed"
 	"log"
 
+	"quickssh/internal/ssh"
+
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -15,7 +17,7 @@ func main() {
 		Name:        "quickssh",
 		Description: "A quickssh application",
 		Services: []application.Service{
-			application.NewService(&GreetService{}),
+			application.NewService(ssh.NewSSHService()),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),

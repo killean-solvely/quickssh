@@ -3,6 +3,7 @@ package ssh
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 type SSHKey struct {
@@ -18,7 +19,14 @@ func NewSSHService() *SSHService {
 }
 
 func (s SSHService) GetExistingKeys() ([]SSHKey, error) {
-	entries, err := os.ReadDir("~/.ssh")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	sshFolderPath := filepath.Join(home, ".ssh")
+
+	entries, err := os.ReadDir(sshFolderPath)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +43,7 @@ func (s SSHService) GetExistingKeys() ([]SSHKey, error) {
 			continue
 		}
 
-		fullPath := "~/.ssh/" + entry.Name()
+		fullPath := filepath.Join(sshFolderPath, entry.Name())
 
 		contents, err := os.ReadFile(fullPath)
 		if err != nil {

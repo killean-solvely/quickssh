@@ -14,6 +14,7 @@ export default defineConfig({
   resolve: {
     alias: {
       $lib: path.resolve("./src/lib"),
+      bindings: path.resolve("./bindings"),
     },
   },
   plugins: [tailwindcss(), svelte(), wails("./bindings")],
