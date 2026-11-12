@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -58,6 +59,45 @@ func (s SSHService) GetExistingKeys() ([]SSHKey, error) {
 	}
 
 	return keys, nil
+}
+
+func (s SSHService) CreateKey(
+	keyName string,
+	keyPassphrase string,
+	keyType string,
+	comment string,
+) error {
+	// ssh-keygen -t ed25519 -f "$HOME/.ssh/my_new_key" -N "" -C "comment"
+	/*
+		-t ed25519: The type of key to create (e.g., ed25519, rsa, ecdsa).
+		-f /path/to/key: The output file path. Providing this bypasses the "Enter file in which to save the key" prompt.
+		-N "": The new passphrase. Providing an empty string "" bypasses the passphrase prompt entirely. If your user does want a passphrase via your GUI, you just pass it here: -N "my_super_secret_pass".
+		-C "comment": The comment (usually an email address) attached to the public key.
+		Optional: -b 4096 (If you are generating an RSA key and want to specify the bit size).
+	*/
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Printf("Failed to get homedir\n")
+		return err
+	}
+
+	_, err = s.executeCmd("ssh-keygen", []string{
+		"-t", keyType,
+		"-f", filepath.Join(homeDir, ".ssh", keyName),
+		"-N", keyPassphrase,
+		"-C", comment,
+	}...)
+	if err != nil {
+		fmt.Printf("Failed to get execute: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s SSHService) DeleteKey(path string) error {
+	return os.Remove(path)
 }
 
 func (s SSHService) executeCmd(cmd string, args ...string) (string, error) {
