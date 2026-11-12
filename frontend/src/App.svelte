@@ -1,42 +1,29 @@
 <script lang="ts">
-  import * as Table from "$lib/components/ui/table";
-  import { SSHService, type SSHKey } from "bindings/quickssh/internal/ssh";
+  import NavigationBar from "$lib/views/components/NavigationBar.svelte";
+  import Create from "$lib/views/Create.svelte";
+  import SSHKeys from "$lib/views/SSHKeys.svelte";
   import { ModeWatcher } from "mode-watcher";
-  import { onMount } from "svelte";
 
-  let sshKeys: SSHKey[] = $state([]);
+  let route = $state(window.location.hash || "#keys");
 
-  onMount(() => {
-    SSHService.GetExistingKeys().then((keys) => {
-      if (keys) {
-        sshKeys = keys;
-      }
-    });
-  });
+  function updateRoute() {
+    route = window.location.hash || "#keys";
+  }
 </script>
 
+<svelte:window onhashchange={updateRoute} />
 <ModeWatcher defaultMode="dark" />
 
-<div class="p-4">
-  <Table.Root>
-    <Table.Caption>A list of public SSH keys</Table.Caption>
-    <Table.Header>
-      <Table.Row>
-        <Table.Head>Path</Table.Head>
-        <Table.Head>Name</Table.Head>
-        <Table.Head>Public Key</Table.Head>
-      </Table.Row>
-    </Table.Header>
-    <Table.Body>
-      {#each sshKeys as k}
-        <Table.Row>
-          <Table.Cell>{k.Path}</Table.Cell>
-          <Table.Cell>{k.Name}</Table.Cell>
-          <Table.Cell>{k.Pub}</Table.Cell>
-        </Table.Row>
-      {/each}
-    </Table.Body>
-  </Table.Root>
+<div class="p-4 mt-12 w-full min-w-0">
+  <NavigationBar />
+
+  {#if route === "#keys"}
+    <SSHKeys />
+  {:else if route == "#create"}
+    <Create />
+  {:else}
+    <p>Unknown Route: {route}</p>
+  {/if}
 </div>
 
 <style>
