@@ -110,15 +110,6 @@ func (s SSHService) CreateKey(
 	keyType string,
 	comment string,
 ) error {
-	// ssh-keygen -t ed25519 -f "$HOME/.ssh/my_new_key" -N "" -C "comment"
-	/*
-		-t ed25519: The type of key to create (e.g., ed25519, rsa, ecdsa).
-		-f /path/to/key: The output file path. Providing this bypasses the "Enter file in which to save the key" prompt.
-		-N "": The new passphrase. Providing an empty string "" bypasses the passphrase prompt entirely. If your user does want a passphrase via your GUI, you just pass it here: -N "my_super_secret_pass".
-		-C "comment": The comment (usually an email address) attached to the public key.
-		Optional: -b 4096 (If you are generating an RSA key and want to specify the bit size).
-	*/
-
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Printf("Failed to get homedir\n")
@@ -168,9 +159,16 @@ func (s SSHService) GetAgentFingerprints() (map[string]bool, error) {
 	return fingerprints, nil
 }
 
+func (s SSHService) GetPublicSSHKey(sshKey SSHKey) (string, error) {
+	data, err := os.ReadFile(sshKey.PublicKeyPath)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
 func (s SSHService) GetSSHConfig(host string) (any, error) {
 	panic("TODO")
-	return nil, nil
 }
 
 func (s SSHService) DeployKey() {
