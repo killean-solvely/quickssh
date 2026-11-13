@@ -11,6 +11,9 @@
   import { Clipboard } from "@wailsio/runtime";
   import Copy from "@lucide/svelte/icons/copy";
   import * as Table from "$lib/components/ui/table";
+  import Ellipsis from "@lucide/svelte/icons/ellipsis";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+  import * as Dialog from "$lib/components/ui/dialog";
 
   let sshKeys: SSHKey[] = $state([]);
   let selectedKeyPath = $state<string | null>(null);
@@ -18,6 +21,8 @@
     sshKeys.find((k) => k.PublicKeyPath === selectedKeyPath) ?? null,
   );
   let sheetOpen = $state(false);
+  let deleteDialogOpen = $state(false);
+  let toDeleteKey = $state<SSHKey | null>(null);
 
   function reloadKeys() {
     SSHService.GetExistingKeys()
@@ -41,7 +46,10 @@
   }
 
   function deleteKey(sshKey: SSHKey) {
-    SSHService.DeleteKey(sshKey).then(() => reloadKeys());
+    SSHService.DeleteKey(sshKey).then(() => {
+      reloadKeys();
+      toDeleteKey = null;
+    });
   }
 
   onMount(() => {
@@ -72,13 +80,15 @@
 {/snippet}
 
 {#snippet sshKeyActive(k: SSHKey)}
-  {#if k.InAgent}
-    <div class="w-2.5 h-2.5 bg-green-500 rounded-full mr-2.5"></div>
-    <p class="text-muted-foreground text-xs self-center">In Agent</p>
-  {:else}
-    <div class="w-2.5 h-2.5 bg-accent rounded-full mr-2.5"></div>
-    <p class="text-muted-foreground text-xs self-center">Not in Agent</p>
-  {/if}
+  <div class="flex flex-row items-center justify-between">
+    {#if k.InAgent}
+      <div class="w-2.5 h-2.5 bg-green-500 rounded-full mr-2.5"></div>
+      <p class="text-muted-foreground text-xs self-center">In Agent</p>
+    {:else}
+      <div class="w-2.5 h-2.5 bg-accent rounded-full mr-2.5"></div>
+      <p class="text-muted-foreground text-xs self-center">Not in Agent</p>
+    {/if}
+  </div>
 {/snippet}
 
 {#snippet sshKeyCard(k: SSHKey)}
@@ -96,11 +106,46 @@
     <Card.Content class="px-2 pb-6">
       {@render fingerprintSub(k)}
     </Card.Content>
-    <Card.Footer class="px-1.5 pb-1.5 flex flex-row align-middle">
+    <Card.Footer class="px-1.5 pb-1.5 flex justify-between">
       {@render sshKeyActive(k)}
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+          <Ellipsis class="text-muted-foreground" size="18px" />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content>
+          <DropdownMenu.Item
+            variant="destructive"
+            onclick={() => {
+              deleteDialogOpen = true;
+              toDeleteKey = k;
+            }}
+          >
+            Delete
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
     </Card.Footer>
   </Card.Root>
 {/snippet}
+
+<Dialog.Root bind:open={deleteDialogOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>Delete SSH Key {toDeleteKey!.Name}?</Dialog.Title>
+      <Dialog.Description>This action cannot be undone.</Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer class="flex flex-row justify-between sm:justify-between">
+      <Dialog.Close type="button">
+        <Button variant="outline">Cancel</Button>
+      </Dialog.Close>
+      <Dialog.Close type="button">
+        <Button variant="destructive" onclick={() => deleteKey(toDeleteKey!)}>
+          Confirm
+        </Button>
+      </Dialog.Close>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
 <Resizable.PaneGroup
   direction="horizontal"
