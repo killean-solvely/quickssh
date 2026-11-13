@@ -8,7 +8,7 @@
 
 <ModeWatcher defaultMode="dark" />
 
-<div class="p-2.5 w-full min-w-0">
+<div class="w-full min-w-0">
   <Tabs.Root value="#keys">
     <Tabs.List variant="line" class="ml-20">
       <Tabs.Trigger value="#keys">Keys</Tabs.Trigger>

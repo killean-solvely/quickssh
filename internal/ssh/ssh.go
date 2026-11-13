@@ -3,14 +3,20 @@ package ssh
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type SSHKey struct {
-	Name string
-	Path string
-	Pub  string
+	Name           string
+	PublicKeyPath  string
+	PrivateKeyPath *string
+	Algorithm      string
+	Fingerprint    string
+	Comment        *string
+	HasPrivateKey  bool
+	InAgent        bool
+	Permissions    *string
 }
 
 type SSHService struct{}
@@ -44,17 +50,39 @@ func (s SSHService) GetExistingKeys() ([]SSHKey, error) {
 			continue
 		}
 
+		baseName, _, _ := strings.Cut(entry.Name(), ".")
 		fullPath := filepath.Join(sshFolderPath, entry.Name())
+		fingerprintFull, err := s.GetFingerprint(fullPath)
+		if err != nil {
+			return nil, err
+		}
 
-		contents, err := os.ReadFile(fullPath)
+		fingerprint := strings.Split(fingerprintFull, " ")[1]
+
+		// Break the comment and algo out of the fingerprint
+		splits := strings.Split(fingerprintFull, " ")
+		comment := strings.Join(splits[2:len(splits)-1], " ")
+		algorithm := strings.Trim(
+			strings.TrimSpace(strings.Join(splits[len(splits)-1:], " ")),
+			"()",
+		)
+
+		// Check if the private form exists
+		privPath := filepath.Join(sshFolderPath, baseName)
+		privExists, err := fileExists(privPath)
 		if err != nil {
 			return nil, err
 		}
 
 		keys = append(keys, SSHKey{
-			Name: entry.Name(),
-			Path: fullPath,
-			Pub:  string(contents),
+			Name:           baseName,
+			PublicKeyPath:  fullPath,
+			Algorithm:      algorithm,
+			Fingerprint:    fingerprint,
+			Comment:        &comment,
+			HasPrivateKey:  privExists,
+			PrivateKeyPath: &privPath,
+			// TODO: Check if in agent, and get permissions for file
 		})
 	}
 
@@ -82,7 +110,7 @@ func (s SSHService) CreateKey(
 		return err
 	}
 
-	_, err = s.executeCmd("ssh-keygen", []string{
+	_, err = executeCmd("ssh-keygen", []string{
 		"-t", keyType,
 		"-f", filepath.Join(homeDir, ".ssh", keyName),
 		"-N", keyPassphrase,
@@ -101,8 +129,14 @@ func (s SSHService) DeleteKey(path string) error {
 }
 
 func (s SSHService) GetFingerprint(keyPath string) (string, error) {
-	panic("TODO")
-	return "", nil
+	fingerprint, err := executeCmd("ssh-keygen", []string{
+		"-lf", keyPath,
+	}...)
+	if err != nil {
+		return "", err
+	}
+
+	return fingerprint, nil
 }
 
 func (s SSHService) GetSSHConfig(host string) (any, error) {
@@ -112,17 +146,4 @@ func (s SSHService) GetSSHConfig(host string) (any, error) {
 
 func (s SSHService) DeployKey() {
 	panic("TODO")
-}
-
-func (s SSHService) executeCmd(cmd string, args ...string) (string, error) {
-	c := exec.Command(cmd, args...)
-	out, err := c.CombinedOutput()
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
-}
-
-func isPubKey(name string) bool {
-	return len(name) >= 4 && name[len(name)-4:] == ".pub"
 }
