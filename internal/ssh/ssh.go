@@ -142,6 +142,33 @@ func (s SSHService) DeleteKey(key SSHKey) error {
 	return nil
 }
 
+func (s SSHService) AddKeyToAgent(key SSHKey) error {
+	if !key.HasPrivateKey || key.PrivateKeyPath == nil {
+		return fmt.Errorf("this key has no private key")
+	}
+
+	_, err := executeCmd(
+		"ssh-add",
+		*key.PrivateKeyPath,
+	)
+
+	return err
+}
+
+func (s SSHService) RemoveKeyFromAgent(key SSHKey) error {
+	if !key.HasPrivateKey || key.PrivateKeyPath == nil {
+		return fmt.Errorf("this key has no private key")
+	}
+
+	_, err := executeCmd(
+		"ssh-add",
+		"-d",
+		*key.PrivateKeyPath,
+	)
+
+	return err
+}
+
 func (s SSHService) GetAgentFingerprints() (map[string]bool, error) {
 	output, err := executeCmd("ssh-add", "-l", "-E", "sha256")
 	if err != nil {

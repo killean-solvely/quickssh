@@ -2,7 +2,6 @@
   import Badge from "$lib/components/ui/badge/badge.svelte";
   import * as Card from "$lib/components/ui/card";
   import KeyRound from "@lucide/svelte/icons/key-round";
-  import X from "@lucide/svelte/icons/x";
   import Fingerprint from "@lucide/svelte/icons/fingerprint-pattern";
   import { SSHService, type SSHKey } from "bindings/quickssh/internal/ssh";
   import { onMount } from "svelte";
@@ -14,7 +13,10 @@
   import * as Table from "$lib/components/ui/table";
 
   let sshKeys: SSHKey[] = $state([]);
-  let selectedKey = $state<SSHKey | null>(null);
+  let selectedKeyPath = $state<string | null>(null);
+  let selectedKey = $derived(
+    sshKeys.find((k) => k.PublicKeyPath === selectedKeyPath) ?? null,
+  );
   let sheetOpen = $state(false);
 
   function reloadKeys() {
@@ -30,7 +32,7 @@
   }
 
   function openKeyDetails(key: SSHKey) {
-    selectedKey = key;
+    selectedKeyPath = key.PublicKeyPath;
     sheetOpen = true;
   }
 
@@ -184,6 +186,31 @@
               </Table.Row>
             </Table.Body>
           </Table.Root>
+          <Card.Root class="mt-4">
+            <Card.Content>
+              <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                  {@render sshKeyActive(selectedKey)}
+                </div>
+                <Button
+                  variant="outline"
+                  onclick={async () => {
+                    if (!selectedKey) return;
+
+                    if (selectedKey.InAgent) {
+                      await SSHService.RemoveKeyFromAgent(selectedKey);
+                    } else {
+                      await SSHService.AddKeyToAgent(selectedKey);
+                    }
+
+                    reloadKeys();
+                  }}
+                >
+                  {selectedKey?.InAgent ? "Remove from Agent" : "Add to Agent"}
+                </Button>
+              </div>
+            </Card.Content>
+          </Card.Root>
         </div>
         <div class="shrink-0 border-t pt-4">
           <Button
@@ -194,7 +221,7 @@
           <Button
             variant="outline"
             class="w-full mb-2.5 mt-2"
-            onclick={() => (selectedKey = null)}
+            onclick={() => (selectedKeyPath = null)}
           >
             Close
           </Button>
