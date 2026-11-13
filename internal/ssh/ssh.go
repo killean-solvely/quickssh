@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/crypto/ssh"
 )
 
 type SSHKey struct {
@@ -38,6 +40,11 @@ func (s SSHService) GetExistingKeys() ([]SSHKey, error) {
 		return nil, err
 	}
 
+	agentKeys, err := s.GetAgentFingerprints()
+	if err != nil {
+		agentKeys = make(map[string]bool)
+	}
+
 	keys := []SSHKey{}
 	for _, entry := range entries {
 		// Skip directories
@@ -50,22 +57,18 @@ func (s SSHService) GetExistingKeys() ([]SSHKey, error) {
 			continue
 		}
 
-		baseName, _, _ := strings.Cut(entry.Name(), ".")
+		baseName := strings.TrimSuffix(entry.Name(), ".pub")
 		fullPath := filepath.Join(sshFolderPath, entry.Name())
-		fingerprintFull, err := s.GetFingerprint(fullPath)
+
+		data, err := os.ReadFile(fullPath)
 		if err != nil {
 			return nil, err
 		}
 
-		fingerprint := strings.Split(fingerprintFull, " ")[1]
-
-		// Break the comment and algo out of the fingerprint
-		splits := strings.Split(fingerprintFull, " ")
-		comment := strings.Join(splits[2:len(splits)-1], " ")
-		algorithm := strings.Trim(
-			strings.TrimSpace(strings.Join(splits[len(splits)-1:], " ")),
-			"()",
-		)
+		// Get algo and fingerprint
+		pubKey, comment, _, _, err := ssh.ParseAuthorizedKey(data)
+		algorithm := pubKey.Type()
+		fingerprint := ssh.FingerprintSHA256(pubKey)
 
 		// Check if the private form exists
 		privPath := filepath.Join(sshFolderPath, baseName)
@@ -74,16 +77,28 @@ func (s SSHService) GetExistingKeys() ([]SSHKey, error) {
 			return nil, err
 		}
 
-		keys = append(keys, SSHKey{
-			Name:           baseName,
-			PublicKeyPath:  fullPath,
-			Algorithm:      algorithm,
-			Fingerprint:    fingerprint,
-			Comment:        &comment,
-			HasPrivateKey:  privExists,
-			PrivateKeyPath: &privPath,
-			// TODO: Check if in agent, and get permissions for file
-		})
+		k := SSHKey{
+			Name:          baseName,
+			PublicKeyPath: fullPath,
+			Algorithm:     algorithm,
+			Fingerprint:   fingerprint,
+			Comment:       &comment,
+			HasPrivateKey: privExists,
+			InAgent:       agentKeys[fingerprint],
+		}
+
+		// Get file permissions
+		info, err := os.Stat(privPath)
+		if err == nil {
+			v := fmt.Sprintf("%04o", info.Mode().Perm())
+			k.Permissions = &v
+		}
+
+		if privExists {
+			k.PrivateKeyPath = &privPath
+		}
+
+		keys = append(keys, k)
 	}
 
 	return keys, nil
@@ -128,15 +143,21 @@ func (s SSHService) DeleteKey(path string) error {
 	return os.Remove(path)
 }
 
-func (s SSHService) GetFingerprint(keyPath string) (string, error) {
-	fingerprint, err := executeCmd("ssh-keygen", []string{
-		"-lf", keyPath,
-	}...)
+func (s SSHService) GetAgentFingerprints() (map[string]bool, error) {
+	output, err := executeCmd("ssh-add", "-l", "-E", "sha256")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return fingerprint, nil
+	fingerprints := map[string]bool{}
+	for _, line := range strings.Split(output, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+		fingerprints[fields[1]] = true
+	}
+	return fingerprints, nil
 }
 
 func (s SSHService) GetSSHConfig(host string) (any, error) {
