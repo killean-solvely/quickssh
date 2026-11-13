@@ -7,7 +7,6 @@
   import { SSHService, type SSHKey } from "bindings/quickssh/internal/ssh";
   import { onMount } from "svelte";
   import Separator from "$lib/components/ui/separator/separator.svelte";
-  import * as Sheet from "$lib/components/ui/sheet";
   import { Button } from "$lib/components/ui/button";
 
   let sshKeys: SSHKey[] = $state([]);
@@ -43,7 +42,11 @@
 {#snippet sshKeyCard(k: SSHKey)}
   <Card.Root
     onclick={() => openKeyDetails(k)}
-    class="w-full p-2 gap-0 hover:bg-accent/70"
+    class={{
+      "w-full p-2 gap-0 hover:bg-accent/70": true,
+      "border-primary/50 border":
+        selectedKey?.PublicKeyPath === k.PublicKeyPath,
+    }}
   >
     <Card.Header class="flex align-middle px-1.5 pt-1.5 pb-2.5 justify-between">
       <div class="flex align-middle">
