@@ -12,8 +12,10 @@
   import Copy from "@lucide/svelte/icons/copy";
   import * as Table from "$lib/components/ui/table";
   import Ellipsis from "@lucide/svelte/icons/ellipsis";
+  import * as Icons from "@lucide/svelte/icons";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import * as Dialog from "$lib/components/ui/dialog";
+  import Create from "./Create.svelte";
 
   let sshKeys: SSHKey[] = $state([]);
   let selectedKeyPath = $state<string | null>(null);
@@ -23,6 +25,8 @@
   let sheetOpen = $state(false);
   let deleteDialogOpen = $state(false);
   let toDeleteKey = $state<SSHKey | null>(null);
+
+  let createDialogOpen = $state(false);
 
   function reloadKeys() {
     SSHService.GetExistingKeys()
@@ -147,18 +151,39 @@
   </Dialog.Content>
 </Dialog.Root>
 
+<Dialog.Root bind:open={createDialogOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>New SSH Key</Dialog.Title>
+      <Dialog.Description>Create a new SSH key.</Dialog.Description>
+    </Dialog.Header>
+    <Create {reloadKeys} closeDialog={() => (createDialogOpen = false)} />
+  </Dialog.Content>
+</Dialog.Root>
+
 <Resizable.PaneGroup
   direction="horizontal"
   class="h-full min-h-0 overflow-hidden px-4"
 >
   <Resizable.Pane class="min-w-0 min-h-0 overflow-hidden">
     <div class="flex h-full min-h-0 flex-col">
-      <div class="mb-5 mt-4 flex shrink-0 flex-col gap-1.5">
-        <h1 class="text-3xl font-bold">SSH Keys</h1>
-        <p class="text-muted-foreground">
-          Manage your SSH identities and public keys.
-        </p>
-        <Separator class="mt-2.5" />
+      <div class="mb-5 mt-4">
+        <div class="flex flex-1 w-full justify-between items-end">
+          <div class="flex flex-col shrink-0 gap-1.5">
+            <h1 class="text-3xl font-bold">SSH Keys</h1>
+            <p class="text-muted-foreground">
+              Manage your SSH identities and public keys.
+            </p>
+          </div>
+          <Button
+            class="m-0 p-0 w-auto h-auto bg-background text-muted-foreground"
+            variant="outline"
+            onclick={() => (createDialogOpen = true)}
+          >
+            <Icons.SquarePlus />
+          </Button>
+        </div>
+        <Separator class="mt-4" />
       </div>
 
       <div class="min-h-0 flex-1 overflow-y-auto mb-3 rounded-xl">

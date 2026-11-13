@@ -5,6 +5,13 @@
   import * as Select from "$lib/components/ui/select";
   import { SSHService } from "bindings/quickssh/internal/ssh";
 
+  interface Props {
+    reloadKeys: () => void;
+    closeDialog: () => void;
+  }
+
+  const { reloadKeys, closeDialog }: Props = $props();
+
   let keyName: string = $state("");
   let keyPassphrase: string = $state("");
   let keyComment: string = $state("");
@@ -28,6 +35,8 @@
         keyPassphrase = "";
         keyComment = "";
         keyType = "";
+        reloadKeys();
+        closeDialog();
       })
       .catch((e) => {
         console.log("Something went wrong!", e);
