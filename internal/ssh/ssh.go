@@ -139,8 +139,16 @@ func (s SSHService) CreateKey(
 	return nil
 }
 
-func (s SSHService) DeleteKey(path string) error {
-	return os.Remove(path)
+func (s SSHService) DeleteKey(key SSHKey) error {
+	if err := os.Remove(key.PublicKeyPath); err != nil {
+		return err
+	}
+	if key.HasPrivateKey && key.PrivateKeyPath != nil {
+		if err := os.Remove(*key.PrivateKeyPath); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s SSHService) GetAgentFingerprints() (map[string]bool, error) {
