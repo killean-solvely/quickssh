@@ -16,6 +16,7 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import * as Dialog from "$lib/components/ui/dialog";
   import Create from "./Create.svelte";
+  import Deploy from "./Deploy.svelte";
 
   let sshKeys: SSHKey[] = $state([]);
   let selectedKeyPath = $state<string | null>(null);
@@ -25,6 +26,8 @@
   let sheetOpen = $state(false);
   let deleteDialogOpen = $state(false);
   let toDeleteKey = $state<SSHKey | null>(null);
+
+  let deployDialogOpen = $state(false);
 
   let createDialogOpen = $state(false);
 
@@ -161,6 +164,21 @@
   </Dialog.Content>
 </Dialog.Root>
 
+{#if selectedKey}
+  <Dialog.Root bind:open={deployDialogOpen}>
+    <Dialog.Content>
+      <Dialog.Header>
+        <Dialog.Title>Deploy</Dialog.Title>
+        <Dialog.Description>Deploy {selectedKey.Name}</Dialog.Description>
+      </Dialog.Header>
+      <Deploy
+        toDeployKey={selectedKey}
+        closeDialog={() => (deployDialogOpen = false)}
+      />
+    </Dialog.Content>
+  </Dialog.Root>
+{/if}
+
 <Resizable.PaneGroup
   direction="horizontal"
   class="h-full min-h-0 overflow-hidden px-4"
@@ -285,6 +303,13 @@
         <div class="shrink-0 border-t pt-4">
           <Button
             class="w-full"
+            onclick={() => (deployDialogOpen = true)}
+            disabled={!selectedKey}
+          >
+            Deploy
+          </Button>
+          <Button
+            class="w-full mt-2"
             onclick={() => copyPublicKey(selectedKey!)}
             disabled={!selectedKey}>Copy Public Key</Button
           >

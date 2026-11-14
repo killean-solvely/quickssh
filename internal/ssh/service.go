@@ -12,8 +12,12 @@ type SSHKey struct {
 	Permissions    *string
 }
 
-type SSHService struct{}
+type SSHService struct {
+	hostKeyApprovals *hostKeyApprovals
+}
 
 func NewSSHService() *SSHService {
-	return &SSHService{}
+	return &SSHService{
+		hostKeyApprovals: &hostKeyApprovals{},
+	}
 }
