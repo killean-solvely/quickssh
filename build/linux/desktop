@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
-Name=My Product
-Comment=A quickssh application
+Name=QuickSSH
+Comment=Tool to quickly assess, create, and deploy SSH keys on MacOS.
 # The Exec line includes %u to pass the URL to the application
-Exec=/usr/local/bin/quickssh %u
+Exec=/usr/local/bin/QuickSSH %u
 Terminal=false
 Type=Application
-Icon=quickssh
+Icon=QuickSSH
 Categories=Utility;
-StartupWMClass=quickssh
+StartupWMClass=QuickSSH
 
  

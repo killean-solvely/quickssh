@@ -3,26 +3,26 @@
 #
 # The lines below are called `modelines`. See `:help modeline`
 
-name: "quickssh"
+name: "QuickSSH"
 arch: ${GOARCH}
 platform: "linux"
 version: "0.1.0"
 section: "default"
 priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
-description: "A quickssh application"
+description: "Tool to quickly assess, create, and deploy SSH keys on MacOS."
 vendor: "My Company"
 homepage: "https://wails.io"
 license: "MIT"
 release: "1"
 
 contents:
-  - src: "./bin/quickssh"
-    dst: "/usr/local/bin/quickssh"
+  - src: "./bin/QuickSSH"
+    dst: "/usr/local/bin/QuickSSH"
   - src: "./build/appicon.png"
-    dst: "/usr/share/icons/hicolor/128x128/apps/quickssh.png"
-  - src: "./build/linux/quickssh.desktop"
-    dst: "/usr/share/applications/quickssh.desktop"
+    dst: "/usr/share/icons/hicolor/128x128/apps/QuickSSH.png"
+  - src: "./build/linux/QuickSSH.desktop"
+    dst: "/usr/share/applications/QuickSSH.desktop"
 
 # Default dependencies for the GTK4 + WebKitGTK 6.0 stack (Ubuntu 24.04+ / Debian 13+)
 depends:

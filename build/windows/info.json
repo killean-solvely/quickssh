@@ -6,9 +6,9 @@
 		"0409": {
 			"ProductVersion": "0.1.0",
 			"CompanyName": "My Company",
-			"FileDescription": "A quickssh application",
-			"LegalCopyright": "© 2026, My Company",
-			"ProductName": "My Product",
+			"FileDescription": "Tool to quickly assess, create, and deploy SSH keys on MacOS.",
+			"LegalCopyright": "(c) 2026",
+			"ProductName": "QuickSSH",
 			"Comments": "This is a comment"
 		}
 	}

@@ -14,8 +14,8 @@ var assets embed.FS
 
 func main() {
 	app := application.New(application.Options{
-		Name:        "quickssh",
-		Description: "A quickssh application",
+		Name:        "QuickSSH",
+		Description: "Tool to quickly assess, create, and deploy SSH keys on MacOS.",
 		Services: []application.Service{
 			application.NewService(ssh.NewSSHService()),
 		},
@@ -28,7 +28,7 @@ func main() {
 	})
 
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:  "quickssh",
+		Title:  "QuickSSH",
 		Width:  1200,
 		Height: 800,
 		Mac: application.MacWindow{
